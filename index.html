@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>메타인지 어원 단어장 (13~15강)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f0fdfa; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+
+        .accordion-content { transition: max-height 0.35s ease-in-out, padding 0.35s ease-in-out, opacity 0.35s ease-in-out; max-height: 0; opacity: 0; overflow: hidden; }
+        .accordion-content.open { max-height: 400px; opacity: 1; padding-top: 1rem; padding-bottom: 1rem; }
+        
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .flip-card-inner { transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+
+        .tab-btn.active { color: #0f766e; border-bottom-color: #0f766e; font-weight: 800; background-color: #ccfbf1; }
+
+        .app-container { max-width: 480px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+    </style>
+</head>
+<body>
+
+<div class="app-container flex flex-col h-screen overflow-hidden">
+    
+    <header class="bg-teal-700 text-white p-4 sticky top-0 z-20 flex justify-between items-center shadow-lg rounded-b-xl">
+        <div>
+            <h1 class="text-xl font-extrabold tracking-tight"><i class="fa-solid fa-layer-group mr-2"></i>메타인지 단어장</h1>
+            <p class="text-xs text-teal-100 mt-1 font-medium">13강(쇼핑) · 14강(스포츠) · 15강(여행)</p>
+        </div>
+        <button onclick="toggleMode()" id="modeToggleBtn" class="bg-white text-teal-700 px-3 py-1.5 rounded-full text-sm font-bold shadow-md hover:bg-teal-50 transition transform active:scale-95">
+            <i class="fa-solid fa-clone mr-1"></i> 카드모드
+        </button>
+    </header>
+
+    <div class="flex bg-white shadow-sm sticky top-[72px] z-10 border-b border-gray-200">
+        <button id="tab-13" onclick="setLesson(13)" class="tab-btn active flex-1 py-3.5 text-sm text-gray-500 border-b-2 border-transparent transition duration-200"><i class="fa-solid fa-cart-shopping mr-1"></i> 13강</button>
+        <button id="tab-14" onclick="setLesson(14)" class="tab-btn flex-1 py-3.5 text-sm text-gray-500 border-b-2 border-transparent transition duration-200"><i class="fa-solid fa-medal mr-1"></i> 14강</button>
+        <button id="tab-15" onclick="setLesson(15)" class="tab-btn flex-1 py-3.5 text-sm text-gray-500 border-b-2 border-transparent transition duration-200"><i class="fa-solid fa-plane-departure mr-1"></i> 15강</button>
+    </div>
+
+    <main id="listView" class="flex-1 overflow-y-auto p-4 space-y-6 pb-24 bg-gray-50">
+        <!-- JS 렌더링 영역 -->
+    </main>
+
+    <div id="flashcardView" class="hidden absolute inset-0 bg-gray-900 bg-opacity-95 z-30 flex-col pb-10">
+        <div class="flex justify-between items-center p-5 text-white">
+            <span id="flashcardCounter" class="text-sm font-bold bg-gray-800 px-4 py-1.5 rounded-full border border-gray-600 shadow-inner">1 / 50</span>
+            <button onclick="toggleMode()" class="text-gray-400 hover:text-white transition transform hover:rotate-90"><i class="fa-solid fa-xmark text-3xl"></i></button>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center p-6 w-full perspective-1000">
+            <div id="flashcard" class="w-full h-[68vh] max-w-sm relative transform-style-3d flip-card-inner cursor-pointer" onclick="flipCard()">
+                
+                <!-- 플래시카드 앞면 -->
+                <div class="absolute inset-0 w-full h-full bg-white rounded-3xl shadow-2xl backface-hidden flex flex-col justify-center items-center p-8 text-center border-b-8 border-teal-500">
+                    <span id="cardGroup" class="absolute top-6 text-xs font-bold text-teal-800 bg-teal-100 px-3 py-1 rounded-full border border-teal-200">그룹</span>
+                    <h2 id="cardWord" class="text-4xl font-black text-gray-800 mb-4 tracking-tight break-words">Word</h2>
+                    <p class="text-gray-400 text-sm mt-6 font-medium animate-pulse"><i class="fa-solid fa-hand-pointer mr-2"></i>카드를 눌러 어원 보기</p>
+                </div>
+
+                <!-- 플래시카드 뒷면 -->
+                <div class="absolute inset-0 w-full h-full bg-teal-800 rounded-3xl shadow-2xl backface-hidden rotate-y-180 flex flex-col p-6 text-white overflow-y-auto border-b-8 border-teal-950">
+                    <h2 id="cardWordBack" class="text-2xl font-bold mb-2 border-b border-teal-600 pb-2 text-teal-200">Word</h2>
+                    <p id="cardMeaning" class="text-2xl font-black mb-5 text-white">의미</p>
+                    
+                    <div class="bg-teal-900 bg-opacity-50 rounded-xl p-4 mb-4 shadow-inner">
+                        <p class="text-[0.7rem] text-teal-300 mb-2 font-bold uppercase tracking-wider"><i class="fa-solid fa-book-open mr-1"></i> 어원 스토리 (Semantic Shift)</p>
+                        <p id="cardRoot" class="text-sm leading-relaxed text-teal-50 font-medium">어원 설명</p>
+                    </div>
+                    
+                    <div class="bg-teal-900 bg-opacity-50 rounded-xl p-4 shadow-inner">
+                        <p class="text-[0.7rem] text-amber-300 mb-2 font-bold uppercase tracking-wider"><i class="fa-solid fa-link mr-1"></i> 동계어 (Family)</p>
+                        <p id="cardCognates" class="text-sm font-bold text-amber-100">동계어 설명</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-center items-center space-x-8 px-6 pb-4">
+            <button onclick="prevCard()" class="w-16 h-16 rounded-full bg-gray-700 text-white flex justify-center items-center active:bg-gray-600 hover:bg-gray-600 transition transform active:scale-90 shadow-xl border border-gray-600">
+                <i class="fa-solid fa-chevron-left text-2xl"></i>
+            </button>
+            <button onclick="nextCard()" class="w-16 h-16 rounded-full bg-teal-500 text-white flex justify-center items-center active:bg-teal-400 hover:bg-teal-400 transition transform active:scale-90 shadow-[0_0_20px_rgba(20,184,166,0.4)]">
+                <i class="fa-solid fa-chevron-right text-2xl"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const db = {
+        // ==========================================
+        // 13강: 쇼핑, 소비, 상업 (50단어)
+        // ==========================================
+        13: [
+            // [상업과 판매]
+            { word: "merchandise", meaning: "상품", root: "merc(장사하다) + andise → 여러 상인들이 시장에 모여 왁자지껄하게 사고파는 모든 '상품'들을 통틀어 이르는 말.", cognates: "merchant(상인), commerce(상업)", group: "1. 상업과 판매 (-merc-, -tail-)" },
+            { word: "merchandiser", meaning: "판매자", root: "merc(장사하다) + er → 단순히 물건을 넘기는 사람이 아니라, 상품(merchandise)을 기획하고 유통하여 '판매하는 사람'.", cognates: "merchandise(상품)", group: "1. 상업과 판매 (-merc-, -tail-)" },
+            { word: "retailer", meaning: "소매상", root: "re(다시) + tail(자르다) → 도매상에서 덩어리로 사 온 물건을 일반 소비자에게 조금씩 '다시 잘게 잘라서 파는' 소매상.", cognates: "detail(세부사항), tailor(재단사)", group: "1. 상업과 판매 (-merc-, -tail-)" },
+            { word: "wholesale", meaning: "도매", root: "whole(전체) + sale(판매) → 물건을 낱개로 쪼개지 않고 창고에 있는 '전체(whole)' 덩어리째로 한꺼번에 대량으로 파는 '도매'.", cognates: "whole(전체의)", group: "1. 상업과 판매 (-merc-, -tail-)" },
+            { word: "bargain sale", meaning: "염가 판매 (싼값으로 판매하는 것)", root: "bargain(흥정, 싼 물건) + sale → 상인과 손님이 치열하게 가격을 깎고 흥정하여 아주 '싸게 파는(sale)' 행사.", cognates: "bargain(흥정하다)", group: "1. 상업과 판매 (-merc-, -tail-)" },
+            { word: "sales slip", meaning: "영수증", root: "sale(판매) + slip(종이조각) → 물건을 판매한(sale) 내역이 길쭉하고 얇게 찢어진 '종이조각(slip)'에 인쇄되어 나오는 '영수증'.", cognates: "slippers(슬리퍼)", group: "1. 상업과 판매 (-merc-, -tail-)" },
+
+            // [구매와 가치]
+            { word: "buy", meaning: "사다", root: "고대 영어 bycgan(돈을 내고 얻다) → 물건을 돈을 지불하고 나의 소유로 만드는 가장 기본적인 행위.", cognates: "buyer(구매자)", group: "2. 구매와 가치 (-pur-, -val-)" },
+            { word: "purchaser", meaning: "구매자", root: "pur(앞으로) + chase(쫓다) + er → 원하는 물건을 얻기 위해 돈을 들고 앞으로 맹렬히 '쫓아가서 쟁취하는 사람(구매자)'.", cognates: "purchase(구매), chase(추격하다)", group: "2. 구매와 가치 (-pur-, -val-)" },
+            { word: "make a purchase of", meaning: "~을 구입하다", root: "purchase(구입)를 make(하다) → 단순히 'buy'보다 더 격식을 갖춰 중요한 물건을 '구입하는 행동을 취하다'.", cognates: "purchase(구매하다)", group: "2. 구매와 가치 (-pur-, -val-)" },
+            { word: "valuable", meaning: "가치가 있는, 값비싼", root: "val(강하다, 가치) + uable → 흔해서 쓸모없는 것이 아니라, 내게 아주 강력한(val) 힘과 쓸모를 지녀 '값비싸고 가치 있는'.", cognates: "value(가치), evaluate(평가하다)", group: "2. 구매와 가치 (-pur-, -val-)" },
+            { word: "at a reasonable price", meaning: "적당한 가격에", root: "reason(이성, 계산) + able → 터무니없이 비싼 것이 아니라, 머리로 이성적으로 '계산했을 때' 딱 납득이 가는 '적당한 가격'.", cognates: "rational(합리적인), reason(이유)", group: "2. 구매와 가치 (-pur-, -val-)" },
+            { word: "reason", meaning: "이유, 이치", root: "라틴어 reri(계산하다, 생각하다) → 왜 그런 일이 일어났는지 머릿속으로 '계산하고 따져보아' 나오는 타당한 '이치나 이유'.", cognates: "rate(비율)", group: "2. 구매와 가치 (-pur-, -val-)" },
+
+            // [품질과 속성]
+            { word: "quality", meaning: "질", root: "qual(어떤 종류의, 성질) + ity → 물건이 단순히 양이 많은지가 아니라, 얼마나 훌륭한 '성질과 본바탕'을 가지고 있는지 나타내는 '질'.", cognates: "qualify(자격을 주다)", group: "3. 품질과 속성 (-qual-, -tend-)" },
+            { word: "quality time", meaning: "양질의 시간", root: "quality(질 좋은) + time(시간) → 그저 흘려보내는 시간이 아니라, 가족이나 소중한 사람과 온전히 집중해서 보내는 '가치 있는 시간'.", cognates: "quality(질)", group: "3. 품질과 속성 (-qual-, -tend-)" },
+            { word: "qualify", meaning: "~에게 자격을 주다", root: "qual(성질) + fy(만들다) → 어떤 직업이나 대회에 나갈 수 있는 충분한 성질과 요건을 '갖추어 만들어주다(자격을 주다)'.", cognates: "qualification(자격)", group: "3. 품질과 속성 (-qual-, -tend-)" },
+            { word: "characteristic", meaning: "특성", root: "character(새겨진 자국) + istic → 찰흙에 도장이 꾹 찍히듯, 어떤 사람이나 사물에 깊게 새겨져서 남과 구분되는 고유한 '특성'.", cognates: "character(특징, 성격)", group: "3. 품질과 속성 (-qual-, -tend-)" },
+            { word: "tendency", meaning: "경향, 흐름", root: "tend(뻗다, 향하다) + ency → 나뭇가지가 햇빛을 향해 뻗어가듯, 사람들의 마음이나 유행이 특정한 방향으로 자꾸 '기울고 뻗어가는 흐름'.", cognates: "extend(연장하다), tend(경향이 있다)", group: "3. 품질과 속성 (-qual-, -tend-)" },
+            { word: "trendy", meaning: "최신 유행의", root: "trend(방향, 흐름) + y → 물이 빙글빙글 도는 방향처럼 대중들의 취향이 몰려가는 거대한 흐름(trend)을 발 빠르게 따라가는.", cognates: "trend(추세)", group: "3. 품질과 속성 (-qual-, -tend-)" },
+            { word: "fashion, vogue", meaning: "유행", root: "fac(만들다) / vag(떠돌다) → 사람들이 새롭게 '만들어낸' 스타일(fashion)이나, 정착하지 않고 일시적으로 '떠도는(vag)' 유행(vogue).", cognates: "factory(공장), vague(모호한)", group: "3. 품질과 속성 (-qual-, -tend-)" },
+
+            // [사치와 보증]
+            { word: "luxury", meaning: "사치품", root: "lux(과도함, 삐뚤어짐) + ury → 꼭 필요한 수준을 넘어서서, 돈을 과도하게 쓰고 번쩍이는 것으로 치장하는 '사치'.", cognates: "deluxe(호화로운)", group: "4. 사치와 보증 (-lux-, -sure-)" },
+            { word: "luxurious", meaning: "사치스러운", root: "lux(과도함) + urious → 눈이 부실 정도로 금이나 보석으로 치장되어 평범함을 넘어선 '사치스럽고 호화로운' 상태.", cognates: "luxury(사치)", group: "4. 사치와 보증 (-lux-, -sure-)" },
+            { word: "extravagance", meaning: "호화, 사치(품)", root: "extra(밖으로) + vag(떠돌다) + ance → 정해진 예산의 울타리 '밖으로' 벗어나서 돈을 펑펑 쓰며 '떠도는' 지나친 낭비와 '사치'.", cognates: "vagabond(방랑자)", group: "4. 사치와 보증 (-lux-, -sure-)" },
+            { word: "ensure", meaning: "보증하다", root: "en(~로 만들다) + sure(확실한) → 혹시 고장 나면 어쩌나 하는 의심을 없애고, 마음을 아주 '확실하게 만들어 주다(보증하다)'.", cognates: "assure(장담하다)", group: "4. 사치와 보증 (-lux-, -sure-)" },
+            { word: "warranty", meaning: "보증(서)", root: "war(지켜보다, 보호하다) → 제품이 망가지지 않도록 회사가 끝까지 책임지고 '지켜봐 주겠다'고 약속하는 증서.", cognates: "guard(경호원), ward(병동)", group: "4. 사치와 보증 (-lux-, -sure-)" },
+            { word: "money-back guarantee", meaning: "환불 보증", root: "guarantee(보호하다) → 물건이 마음에 안 들면 돈(money)을 그대로 돌려주겠다(back)고 강력하게 방패처럼 '보호하고 약속'하는 것.", cognates: "guarantor(보증인)", group: "4. 사치와 보증 (-lux-, -sure-)" },
+
+            // [수량과 포함]
+            { word: "amount", meaning: "양", root: "ad(~에) + mount(오르다, 산) → 물건이나 돈이 계속 더해져서 거대한 '산(mountain)처럼 높이 쌓여 올라간' 전체의 '양'.", cognates: "mountain(산)", group: "5. 수량과 포함 (-quant-, -clud-)" },
+            { word: "sum", meaning: "합계, 전체", root: "summa(가장 높은 곳, 꼭대기) → 숫자들을 모두 더해서 피라미드의 '가장 꼭대기(최종 결과)'에 도달한 '합계'.", cognates: "summary(요약), summit(정상)", group: "5. 수량과 포함 (-quant-, -clud-)" },
+            { word: "quantity", meaning: "양", root: "quant(얼마나 많은) + ity → 질(quality)이 아니라, 숫자로 셀 수 있거나 부피로 잴 수 있는 '얼마나 많은가'의 크기.", cognates: "quantify(양을 재다)", group: "5. 수량과 포함 (-quant-, -clud-)" },
+            { word: "quantify", meaning: "양을 측정하다", root: "quant(얼마나 많은) + fy(만들다) → 눈에 보이지 않는 감정이나 가치를, 정확한 숫자로 세어서 '양으로 만들어 내다(측정하다)'.", cognates: "quantity(수량)", group: "5. 수량과 포함 (-quant-, -clud-)" },
+            { word: "reduction", meaning: "축소, 삭감", root: "re(뒤로) + duc(이끌다) + tion → 가격이나 크기를 예전처럼 앞으로 밀고 나가지 않고, '뒤로 끌어내려' 줄이는 '축소'.", cognates: "reduce(줄이다), produce(생산하다)", group: "5. 수량과 포함 (-quant-, -clud-)" },
+            { word: "include", meaning: "포함하다", root: "in(안에) + clud(가두다) → 어떤 사람이나 물건을 우리 무리의 울타리 '안으로' 집어넣어 문을 '닫아버리는(포함하다)' 것.", cognates: "conclude(결론짓다)", group: "5. 수량과 포함 (-quant-, -clud-)" },
+            { word: "exclude, omit", meaning: "~을 빠뜨리다, 생략하다", root: "ex(밖으로)+clud(가두다) / ob(멀리)+mit(보내다) → 무리 '밖으로' 쫓아내어 문을 닫거나, '멀리 던져버려' 명단에서 완전히 '빠뜨리다'.", cognates: "emit(방출하다)", group: "5. 수량과 포함 (-quant-, -clud-)" },
+            { word: "part", meaning: "일부", root: "part(나누다) → 전체 사과를 칼로 여러 조각으로 '나누었을 때', 그중 한 조각에 해당하는 '부분이나 일부'.", cognates: "particle(입자)", group: "5. 수량과 포함 (-quant-, -clud-)" },
+            { word: "partial", meaning: "일부의", root: "part(부분) + ial → 100% 완전한 것이 아니라, 전체 중에서 쪼개진 일'부분'만 해당하여 덜 끝난.", cognates: "partially(부분적으로)", group: "5. 수량과 포함 (-quant-, -clud-)" },
+
+            // [상태와 감정 (기타)]
+            { word: "essential", meaning: "필수품", root: "ess(존재하다) + ential → 그것이 없으면 아예 '존재(생존)할 수 없을' 정도로 살아가는 데 절대적으로 필요한 '필수품'.", cognates: "essence(본질), present(존재하는)", group: "6. 요구와 상태 (기타)" },
+            { word: "necessary", meaning: "필수적인", root: "ne(아닌) + cess(물러나다) → 더 이상 뒤로 '물러서거나 타협할 수 없이' 반드시 거쳐야만 하는 '필수적인' 것.", cognates: "access(접근), success(성공)", group: "6. 요구와 상태 (기타)" },
+            { word: "demand", meaning: "요구하다", root: "de(완전히) + mand(명령하다) → 부탁이 아니라, 권리를 내세워 '완전히 맡겨달라고 강력하게 명령하며 요구하다'.", cognates: "command(명령하다)", group: "6. 요구와 상태 (기타)" },
+            { word: "satisfactory", meaning: "만족스러운", root: "sat(충분한) + isfactory → 텅 비어있던 배나 마음을 꽉 차게 '충분히' 채워주어 기분이 좋아지는.", cognates: "satisfy(만족시키다)", group: "6. 요구와 상태 (기타)" },
+            { word: "satisfaction", meaning: "만족", root: "sat(충분한) + isfaction → 더 이상 바랄 것이 없을 만큼 기대치가 '충분히 꽉 찬' 상태.", cognates: "saturate(흠뻑 적시다)", group: "6. 요구와 상태 (기타)" },
+            { word: "dissatisfy", meaning: "불만을 느끼게 하다", root: "dis(부정) + satisfy(만족하다) → 기대했던 것만큼 충분하게 채워주지 '못해서' 몹시 실망하고 '불만을 느끼게 하다'.", cognates: "satisfy(만족시키다)", group: "6. 요구와 상태 (기타)" },
+            { word: "unsteady", meaning: "불안정한", root: "un(부정) + steady(stand:서다) → 바닥에 튼튼하게 두 발로 '서 있지' 못하고, 바람에 흔들리듯 몹시 '불안정한'.", cognates: "steady(꾸준한), stand(서다)", group: "6. 요구와 상태 (기타)" },
+            { word: "label", meaning: "꼬리표", root: "라틴어 labellum(작은 조각) → 옷이나 가방에 실로 꿰매어 달아놓은 '작은 헝겊 조각'에서 유래한 '꼬리표'.", cognates: "lapel(옷깃)", group: "6. 요구와 상태 (기타)" },
+            { word: "tag", meaning: "꼬리표, 상표", root: "tag(매달린 끝부분) → 물건의 맨 끝에 덜렁덜렁 매달려 있어서 가격이나 이름을 알려주는 '꼬리표'.", cognates: "tack(압정)", group: "6. 요구와 상태 (기타)" },
+            { word: "price tag", meaning: "가격표", root: "price(가격) + tag(꼬리표) → 상품에 실로 매달린 채 얼마인지 알려주는 직사각형의 '가격표'.", cognates: "price, tag", group: "6. 요구와 상태 (기타)" },
+            { word: "unwrap", meaning: "포장을 풀다", root: "un(반대) + wrap(싸다) → 예쁘게 종이로 '감싸 둔(wrap)' 것을 정반대로 찢거나 벗겨내어 내용물을 꺼내다.", cognates: "wrap(포장하다)", group: "6. 요구와 상태 (기타)" },
+            { word: "in exchange for", meaning: "~와 교환으로", root: "ex(밖으로) + change(바꾸다) → 내가 가진 것을 '밖으로' 내어주고, 대신 남의 것을 받아 서로 자리를 '바꾸는' 조건으로.", cognates: "exchange(교환하다)", group: "6. 요구와 상태 (기타)" },
+            { word: "goods", meaning: "상품", root: "good(좋은 것) + s → 사람들에게 쓸모있고 '좋은 가치'를 지닌 것들을 복수형으로 묶어 시장에서 파는 '상품'이라 부름.", cognates: "good(좋은)", group: "6. 요구와 상태 (기타)" },
+            { word: "insertion", meaning: "주입, 삽입", root: "in(안에) + sert(넣다, 묶다) → 글자나 물건을 틈새 '안으로' 꾹 찔러 넣어 결합시키는 '삽입'.", cognates: "insert(삽입하다), assert(주장하다)", group: "6. 요구와 상태 (기타)" },
+            { word: "receive", meaning: "받다", root: "re(다시) + ceiv(잡다) → 남이 던져주거나 보낸 물건을 내 손으로 뻗어 '다시 잡아채는(받는)' 행위.", cognates: "receipt(영수증), accept(받아들이다)", group: "6. 요구와 상태 (기타)" },
+            { word: "meet", meaning: "(조건을) 충족시키다", root: "고대영어 metan(만나다) → 사람을 만나는 것을 넘어, 요구하는 기준이나 조건 선에 딱 맞게 '가서 닿다(충족하다)'.", cognates: "meeting(회의)", group: "6. 요구와 상태 (기타)" }
+        ],
+
+        // ==========================================
+        // 14강: 스포츠, 경쟁, 태도 (34단어)
+        // ==========================================
+        14: [
+            // [경쟁과 대립]
+            { word: "competition", meaning: "경쟁, 대회", root: "com(함께) + pet(구하다) + ition → 여러 사람이 하나의 메달을 차지하기 위해 '함께 달려들며 구하고 쟁취하려는' 치열한 대회.", cognates: "compete(경쟁하다), petition(청원)", group: "1. 경쟁과 대립 (-pet-, -pon-)" },
+            { word: "competitive", meaning: "경쟁적인", root: "com(함께) + pet(구하다) + itive → 남에게 지지 않으려고 수단과 방법을 가리지 않고 함께 투쟁적으로 '구하고 덤벼드는'.", cognates: "competitor(경쟁자)", group: "1. 경쟁과 대립 (-pet-, -pon-)" },
+            { word: "competitor, opponent", meaning: "경쟁자, 경쟁 상대", root: "ob(반대로, 마주보고) + pon(놓다) → 경기장에서 나와 같은 편이 아니라, 나를 '마주보고 반대편에 놓여(서)' 있는 적.", cognates: "postpone(연기하다)", group: "1. 경쟁과 대립 (-pet-, -pon-)" },
+            { word: "rival, competitor", meaning: "적수, 반대자", root: "riv(강, 시내) → 옛날에 같은 강(river)을 사이에 두고 물을 차지하기 위해 으르렁거리며 싸우던 이웃 마을 사람들(적수).", cognates: "river(강)", group: "1. 경쟁과 대립 (-pet-, -pon-)" },
+            { word: "oppose", meaning: "반대하다", root: "ob(반대로) + pos(두다) → 상대방의 의견에 찬성하지 않고, 아주 정반대 위치에 내 몸을 '두고' 굳건히 대항하다.", cognates: "opposite(반대의), position(위치)", group: "1. 경쟁과 대립 (-pet-, -pon-)" },
+            { word: "game, competition", meaning: "경기", root: "game(사람들이 모여 하는 놀이) → 혼자 노는 것이 아니라, 여러 사람이 모여 규칙을 정해두고 실력을 겨루는 놀이나 '경기'.", cognates: "gamer(게이머)", group: "1. 경쟁과 대립 (-pet-, -pon-)" },
+            
+            // [스포츠와 챔피언]
+            { word: "athlete", meaning: "운동선수", root: "athl(상, 경기) + ete → 고대 그리스에서 올림픽에 나가 메달과 '상'을 타기 위해 피땀 흘려 훈련하는 '선수'.", cognates: "athletic(운동의), triathlon(철인3종)", group: "2. 스포츠와 참여 (-athl-, -part-)" },
+            { word: "championship", meaning: "선수권; (pl.) 선수권 대회", root: "champ(싸우는 자) + ship → 수많은 도전자들을 물리치고 최고의 전사(챔피언)가 될 수 있는 자격을 다루는 '대회'.", cognates: "champion(챔피언)", group: "2. 스포츠와 참여 (-athl-, -part-)" },
+            { word: "champ, winner", meaning: "챔피언, 우승자", root: "champ(전투) / win(이기다) → 치열한 전투(경기) 끝에 마지막까지 살아남아 승리를 거머쥔 사람.", cognates: "champion", group: "2. 스포츠와 참여 (-athl-, -part-)" },
+            { word: "tourney", meaning: "토너먼트에 참가하다", root: "torn(돌다) → 중세 시대 기사들이 말을 타고 경기장을 빙빙 '돌며' 서로 창으로 찌르던 마상 시합에서 유래.", cognates: "turn(돌다), tournament(토너먼트)", group: "2. 스포츠와 참여 (-athl-, -part-)" },
+            { word: "extreme sports", meaning: "극한 스포츠", root: "extr(밖의, 끝의) + sports → 평범한 안전선을 '넘어서 밖으로' 나가, 목숨을 걸고 스피드와 위험을 즐기는 스포츠.", cognates: "extreme(극한)", group: "2. 스포츠와 참여 (-athl-, -part-)" },
+            { word: "take part in", meaning: "참여하다, 참가하다", root: "part(몫, 역할)를 취하다(take) → 방관자로 구경만 하는 게 아니라, 경기장 안에 들어가 나만의 '역할(부분)을 맡는' 것.", cognates: "participate(참여하다)", group: "2. 스포츠와 참여 (-athl-, -part-)" },
+            { word: "participation", meaning: "참가", root: "part(부분) + cip(잡다) + ation → 행사의 일'부분'을 내 손으로 꽉 '잡고' 직접 속으로 뛰어들어 활동하는 '참가'.", cognates: "capture(포획하다)", group: "2. 스포츠와 참여 (-athl-, -part-)" },
+
+            // [규칙과 공정성]
+            { word: "fair play", meaning: "정정당당한 경기 태도", root: "fair(아름다운, 흠없는) + play → 심판 몰래 반칙을 하는 더러운 플레이가 아니라, 흠집 하나 없이 '아름답고 깨끗한' 경기 태도.", cognates: "fairness(공평함)", group: "3. 규칙과 공정성 (-fair-, -poen-)" },
+            { word: "fairness", meaning: "공평함", root: "fair(공평한) + ness → 누구 하나 억울한 사람 없이 똑같은 규칙을 적용받아 차별이 없는 깨끗한 상태.", cognates: "fairly(공정하게)", group: "3. 규칙과 공정성 (-fair-, -poen-)" },
+            { word: "unfair", meaning: "불공평한", root: "un(부정) + fair(공평한) → 뇌물을 받거나 한쪽 편만 유리하게 봐주어서 전혀 '공평하지 못한' 상태.", cognates: "fair(공평한)", group: "3. 규칙과 공정성 (-fair-, -poen-)" },
+            { word: "foully", meaning: "부정하게", root: "foul(썩은, 더러운) + ly → 썩은 냄새가 날 정도로 비열하게 반칙을 쓰며 정정당당하지 못하고 '더럽게' 경기하는 모습.", cognates: "foul(반칙)", group: "3. 규칙과 공정성 (-fair-, -poen-)" },
+            { word: "penal", meaning: "처벌의, 형벌의", root: "poen(벌, 고통) + al → 경기 규칙을 어겼을 때 옐로카드나 벌금을 주어 쓰라린 '고통'을 느끼게 하는 '처벌의'.", cognates: "penalty(형벌), punish(처벌하다)", group: "3. 규칙과 공정성 (-fair-, -poen-)" },
+            { word: "cancel", meaning: "~을 취소하다, 철회하다", root: "cancelli(격자 무늬) → 종이에 적힌 경기 일정을 펜으로 엑스(X)자 격자무늬를 쫙쫙 그어 지워버리며 '취소하다'.", cognates: "cancellation(취소)", group: "3. 규칙과 공정성 (-fair-, -poen-)" },
+
+            // [감정과 태도]
+            { word: "clap", meaning: "박수 치다", root: "의성어 → 두 손바닥이 세게 부딪히며 '짝짝(clap)' 하고 경쾌한 소리를 내는 모습에서 유래.", cognates: "clapper(박수치는 사람)", group: "4. 감정과 태도 (-cour-, -plaud-)" },
+            { word: "applause", meaning: "박수갈채", root: "ad(~를 향해) + plaud(손뼉치다) → 훌륭한 선수를 향해(ad) 관중들이 한꺼번에 우레와 같이 '손뼉을 치며' 환호하는 것.", cognates: "explode(폭발하다), plausible(그럴듯한)", group: "4. 감정과 태도 (-cour-, -plaud-)" },
+            { word: "encouragement", meaning: "격려", root: "en(주다) + cour(심장, 용기) → 두려워하는 선수의 가슴 속에 불타오르는 '심장(용기)을 불어넣어 주어' 힘을 내게 하는 '격려'.", cognates: "courage(용기), core(핵심)", group: "4. 감정과 태도 (-cour-, -plaud-)" },
+            { word: "discourage", meaning: "낙담시키다", root: "dis(빼앗다) + cour(심장, 용기) → 뼈아픈 패배로 인해 가슴 속에서 뜨거운 심장(용기)이 '쑥 빠져나가게' 만들어 기운을 잃게 하다.", cognates: "encourage(격려하다)", group: "4. 감정과 태도 (-cour-, -plaud-)" },
+
+            // [기타 상태와 행동]
+            { word: "amateurish", meaning: "미숙한", root: "amat(사랑하다) + eurish → 돈을 벌기 위한 직업이 아니라, 그저 좋아서 '사랑하는 마음으로' 취미 삼아 하기에 아직은 '미숙한'.", cognates: "amateur(아마추어), amorous(호색적인)", group: "5. 상태와 행동 (기타)" },
+            { word: "professional", meaning: "전문가의", root: "pro(앞에서) + fess(말하다) → 대중들 '앞에' 당당히 나서서 내 직업이라고 '공언할 수 있을' 만큼 실력을 갖춘 '전문가'.", cognates: "profess(공언하다), confess(고백하다)", group: "5. 상태와 행동 (기타)" },
+            { word: "outstand", meaning: "눈에 띄다", root: "out(밖으로) + stand(서다) → 무리 속에 숨어있지 않고, 실력이 너무 압도적이라 무리 '밖으로 튀어나와 서 있어서' 확 '눈에 띄다'.", cognates: "outstanding(뛰어난)", group: "5. 상태와 행동 (기타)" },
+            { word: "hobby", meaning: "취미, 오락", root: "hobbyhorse(조그만 장난감 말) → 옛날 아이들이 빗자루 같은 장난감 말(hobby)을 타며 즐겁게 놀던 것에서 유래한 '취미'.", cognates: "-", group: "5. 상태와 행동 (기타)" },
+            { word: "service", meaning: "봉사, 서비스", root: "serv(노예, 섬기다) → 옛날 하인이 주인을 깍듯하게 '섬기던' 것처럼, 손님을 왕처럼 대하며 편의를 제공하는 '서비스'.", cognates: "servant(하인), preserve(보존하다)", group: "5. 상태와 행동 (기타)" },
+            { word: "able", meaning: "할 수 있는", root: "라틴어 habilis(다루기 쉬운, 능숙한) → 어떤 도구나 기술을 내 손발처럼 능숙하게 척척 다룰 수 있어서 무엇이든 '할 수 있는'.", cognates: "ability(능력)", group: "5. 상태와 행동 (기타)" },
+            { word: "slide", meaning: "미끄러짐", root: "고대영어 slidan(부드럽게 나아가다) → 얼음판이나 미끄럼틀 위에서 마찰 없이 주욱 부드럽게 '미끄러지며' 나아가는 행위.", cognates: "sled(썰매)", group: "5. 상태와 행동 (기타)" },
+            { word: "indoor", meaning: "실내의, 집 안의", root: "in(안에) + door(문) → 춥거나 비가 오는 문밖이 아니라, 지붕과 '문 안쪽'의 안전한 실내에서 진행되는 경기.", cognates: "outdoor(야외의)", group: "5. 상태와 행동 (기타)" },
+            { word: "ranking", meaning: "순위", root: "rank(줄, 열) → 군대에서 병사들을 계급에 따라 앞뒤로 쫙 '줄(rank)을 세우듯', 선수들을 성적순으로 나열한 '순위'.", cognates: "rank(계급)", group: "5. 상태와 행동 (기타)" },
+            { word: "be held", meaning: "개최되다, 열리다", root: "hold(열다, 쥐다)의 수동태 → 누군가가 권한을 쥐고(hold) 사람들을 모아서 거대한 대회가 공식적으로 '개최되다'.", cognates: "hold(잡다)", group: "5. 상태와 행동 (기타)" },
+            { word: "extremely", meaning: "극도로, 매우", root: "extr(끝) + emely → 평범한 중간 지점이 아니라, 더 이상 갈 곳이 없는 가장자리 '끝(extreme)'까지 닿을 정도로 '매우'.", cognates: "extreme(극한의)", group: "5. 상태와 행동 (기타)" }
+        ],
+
+        // ==========================================
+        // 15강: 여행, 교통, 숙박 (26단어)
+        // ==========================================
+        15: [
+            // [운송과 수단]
+            { word: "conveyance (탈것)", meaning: "탈것, 운송 수단", root: "con(함께) + vey(길) → 짐이나 여러 사람을 '같은 길(vey)'을 따라 나란히 이동시켜 주는 마차나 자동차 같은 '탈것'.", cognates: "convey(전달하다)", group: "1. 운송과 이동 (-vey-, -port-)" },
+            { word: "conveyance (운반)", meaning: "운반, 탈것", root: "con(함께) + vey(길) → 공장에서 만들어진 수많은 화물들을 길을 따라 한꺼번에 '함께 실어나르는' 행위인 '운반'.", cognates: "convey(나르다)", group: "1. 운송과 이동 (-vey-, -port-)" },
+            { word: "convey", meaning: "운반하다", root: "con(함께) + vey(길) → 소중한 물건이나 마음속 깊은 진심을 끊기지 않고 하나의 길로 이어지듯 무사히 '전달하고 운반하다'.", cognates: "convoy(호송하다)", group: "1. 운송과 이동 (-vey-, -port-)" },
+            { word: "transport", meaning: "(물건·승객 등을) 나르다", root: "trans(가로질러) + port(나르다) → 화물을 배나 비행기에 싣고 넓은 바다나 국경을 '가로질러서' 반대편으로 '나르다'.", cognates: "export(수출하다), import(수입하다)", group: "1. 운송과 이동 (-vey-, -port-)" },
+            { word: "transportation", meaning: "운송, 운송 수단", root: "trans(가로질러) + port(나르다) + ation → 사람이나 물건을 공간을 뛰어넘어 이동시키는 전체적인 시스템이나 기차, 버스 같은 '수단'.", cognates: "portable(휴대용의)", group: "1. 운송과 이동 (-vey-, -port-)" },
+            { word: "subway", meaning: "(美) 지하철", root: "sub(아래) + way(길) → 복잡한 땅 위가 아니라, 컴컴한 땅 '아래'로 터널을 뚫어 닦아 놓은 쇠'길(way)' 위를 달리는 열차.", cognates: "submarine(잠수함), substitute(대체하다)", group: "1. 운송과 이동 (-vey-, -port-)" },
+
+            // [숙박과 장소]
+            { word: "accommodation", meaning: "수용, 숙박", root: "ac(~쪽으로) + com(함께) + mod(맞추다) → 피곤한 여행객의 요구에 딱 '맞춰서' 편히 쉴 수 있는 공간을 '함께' 제공해 주는 '숙박시설'.", cognates: "accommodate(수용하다), mode(방식)", group: "2. 숙박과 장소 (-mod-, -loc-)" },
+            { word: "location", meaning: "위치", root: "loc(장소) + ation → 지구본 위에서 특정한 호텔이나 관광지가 어디쯤에 점을 찍고 자리 잡고 있는지 나타내는 '장소나 위치'.", cognates: "local(지역의), allocate(할당하다)", group: "2. 숙박과 장소 (-mod-, -loc-)" },
+            { word: "hut", meaning: "오두막", root: "고대 게르만어(숨기다, 은신처) → 튼튼한 벽돌집이 아니라, 비바람을 피해 숲속에 나무로 대충 지어 몸을 숨기는 허름한 '오두막'.", cognates: "hide(숨다 - 연관어)", group: "2. 숙박과 장소 (-mod-, -loc-)" },
+            { word: "uptown", meaning: "주택 지구의", root: "up(위쪽) + town(마을) → 번잡하고 시끄러운 시내 중심(downtown)에서 벗어나, 언덕 '위쪽'에 위치한 조용하고 고급스러운 '주택가'.", cognates: "downtown(시내)", group: "2. 숙박과 장소 (-mod-, -loc-)" },
+            { word: "baggage claim", meaning: "(공항의) 수하물 찾는 곳", root: "bag(가방) + claim(외치다) → 비행기에서 내린 후, 컨베이어 벨트를 돌고 있는 수많은 짐 속에서 저건 내 가방이라고 '외치고(claim) 찾는' 곳.", cognates: "exclaim(외치다)", group: "2. 숙박과 장소 (-mod-, -loc-)" },
+            { word: "luggage", meaning: "(배·비행기 여행의) 수하물", root: "lug(무겁게 끌다) + age → 작은 핸드백이 아니라, 장기 여행을 위해 옷을 잔뜩 넣어 끙끙대며 '무겁게 질질 끌고 다녀야' 하는 큰 짐.", cognates: "lug(끌다)", group: "2. 숙박과 장소 (-mod-, -loc-)" },
+
+            // [여행과 행동]
+            { word: "navigation", meaning: "항해", root: "nav(배) + ig(몰다) + ation → 나침반이나 별빛에 의지하여 망망대해에서 조심스럽게 '배를 몰고' 목적지를 찾아가는 기술이나 '항해'.", cognates: "navy(해군), navigate(길을 찾다)", group: "3. 여행과 관찰 (-nav-, -spect-)" },
+            { word: "voyage", meaning: "크루즈, 유람선 (여행)", root: "vi(길) → 짧은 소풍이 아니라, 거대한 유람선을 타고 바다 위주로 길(vi)을 개척하며 떠나는 길고 낭만적인 긴 '항해나 여행'.", cognates: "via(~을 경유하여), previous(이전의)", group: "3. 여행과 관찰 (-nav-, -spect-)" },
+            { word: "sightsee", meaning: "유람하다, 구경하다", root: "sight(시야, 명소) + see(보다) → 유명한 유적지나 멋진 풍경(sight)을 눈에 담기 위해 여기저기 돌아다니며 '구경하다(see)'.", cognates: "sight(시각)", group: "3. 여행과 관찰 (-nav-, -spect-)" },
+            { word: "spectacular", meaning: "장관인", root: "spect(보다) + acular → 눈을 뗄 수 없을 만큼 시선을 확 사로잡아, 평생 잊지 못할 정도로 스케일이 크고 멋진 '장관인' 풍경.", cognates: "spectator(관중), inspect(조사하다)", group: "3. 여행과 관찰 (-nav-, -spect-)" },
+            { word: "advice", meaning: "사례금을 주다", root: "ad(~를 향해) + vis(보다) → (어원적 파생) 서비스 제공자에게 감사의 마음으로 좋은 관점을 보여주며(충고/격려), 팁(사례금)을 주는 행위.", cognates: "advise(조언하다), vision(시야)", group: "3. 여행과 관찰 (-nav-, -spect-)" },
+            { word: "overseas", meaning: "해외로", root: "over(넘어서) + sea(바다) + s → 국경을 맞댄 옆 나라가 아니라, 넓고 깊은 바다를 비행기나 배로 훌쩍 '넘어가야만' 닿을 수 있는 '해외'.", cognates: "sea(바다)", group: "3. 여행과 관찰 (-nav-, -spect-)" },
+
+            // [출발과 도착]
+            { word: "departure", meaning: "출발", root: "de(떨어져) + part(나누다) + ure → 오랫동안 머물렀던 익숙한 장소에서 몸을 떼어내 '갈라져 떨어져' 나와 새로운 곳으로 첫발을 내딛는 '출발'.", cognates: "depart(출발하다), part(부분)", group: "4. 출발과 도착 (-part-, -rip-)" },
+            { word: "start", meaning: "출발하다", root: "고대영어(갑자기 움직이다) → 멈춰있던 기차나 발걸음이 첫 엔진을 켜고 놀란 듯 팍 하고 '갑자기 튀어 오르며 움직이기 시작하다'.", cognates: "startle(깜짝 놀라게 하다)", group: "4. 출발과 도착 (-part-, -rip-)" },
+            { word: "arrive", meaning: "도착하다", root: "ad(~에) + ripa(강기슭) → 거친 바다를 항해하던 배가 마침내 목적지의 안전한 '강기슭에 무사히 닿아' 정박하며 '도착하다'.", cognates: "river(강), rival(경쟁자)", group: "4. 출발과 도착 (-part-, -rip-)" },
+            { word: "check-in", meaning: "체크인", root: "check(대조하다) + in(안으로) → 호텔이나 공항에 들어가서(in) 예약 명단과 내 여권을 '대조하여(check)' 탑승/투숙 수속을 밟는 것.", cognates: "check(확인하다)", group: "4. 출발과 도착 (-part-, -rip-)" },
+            { word: "move", meaning: "이동하다, 옮기다", root: "mov(움직이다) → 고정되어 있던 몸이나 짐을 힘을 가해서 물리적으로 다른 장소로 '움직여서 옮기다'.", cognates: "movement(움직임), movie(영화)", group: "4. 출발과 도착 (-part-, -rip-)" },
+            { word: "rider", meaning: "타는 사람", root: "ride(타다) + er → 두 발로 걷지 않고 말이나 자전거, 기구 등의 등 위에 올라'타서' 조종하며 가는 사람.", cognates: "ride(타다)", group: "4. 출발과 도착 (-part-, -rip-)" },
+            { word: "in use", meaning: "사용되고 있는", root: "in(~상태에) + use(사용) → 비행기 화장실에 불이 들어와 있듯, 누군가가 점유하여 활발하게 '사용하고 있는' 상태.", cognates: "use(사용하다)", group: "4. 출발과 도착 (-part-, -rip-)" },
+            { word: "availability", meaning: "유용성", root: "a(~에) + vail(가치있다) + ability → 빈 방이나 빈 좌석이 남아 있어서, 내가 당장 돈을 내고 쓸모있게 '이용할 수 있는(가치 있는)' 능력이나 상태.", cognates: "avail(도움이 되다), valid(유효한)", group: "4. 출발과 도착 (-part-, -rip-)" }
+        ]
+    };
+
+    let currentLesson = 13;
+    let currentCardIndex = 0;
+    let isFlipped = false;
+    let currentFlatWordList = [];
+
+    function setLesson(lessonNumber) {
+        currentLesson = lessonNumber;
+        currentCardIndex = 0;
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            btn.classList.replace('text-teal-700', 'text-gray-500');
+            btn.classList.replace('border-teal-700', 'border-transparent');
+            btn.classList.remove('bg-teal-50');
+            btn.classList.remove('font-extrabold');
+        });
+        const activeTab = document.getElementById(`tab-${lessonNumber}`);
+        activeTab.classList.add('active');
+        activeTab.classList.replace('text-gray-500', 'text-teal-700');
+        activeTab.classList.replace('border-transparent', 'border-teal-700');
+        activeTab.classList.add('bg-teal-50');
+        activeTab.classList.add('font-extrabold');
+
+        renderList();
+    }
+
+    function renderList() {
+        const listView = document.getElementById('listView');
+        let htmlContent = '';
+        
+        const words = db[currentLesson];
+        currentFlatWordList = words;
+
+        const groupedData = words.reduce((acc, word) => {
+            if (!acc[word.group]) acc[word.group] = [];
+            acc[word.group].push(word);
+            return acc;
+        }, {});
+
+        for (const [groupName, groupWords] of Object.entries(groupedData)) {
+            htmlContent += `
+                <div class="mb-8">
+                    <h2 class="text-[0.85rem] font-black text-teal-700 uppercase tracking-widest mb-3 pl-2 border-l-4 border-teal-500 shadow-sm py-1 bg-teal-50 rounded-r-lg">${groupName}</h2>
+                    <div class="space-y-4">
+            `;
+            
+            groupWords.forEach((item, index) => {
+                const id = `word-${currentLesson}-${index}`;
+                htmlContent += `
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
+                        <div class="p-4 flex justify-between items-center cursor-pointer active:bg-gray-50" onclick="toggleAccordion('${id}')">
+                            <div class="pr-4">
+                                <h3 class="text-lg font-bold text-gray-800 tracking-tight">${item.word}</h3>
+                                <p class="text-sm font-medium text-gray-500 mt-0.5">${item.meaning}</p>
+                            </div>
+                            <div class="w-8 h-8 flex-shrink-0 flex justify-center items-center rounded-full bg-teal-50 text-teal-600">
+                                <i id="icon-${id}" class="fa-solid fa-chevron-down transition-transform duration-300 text-sm"></i>
+                            </div>
+                        </div>
+                        
+                        <div id="content-${id}" class="accordion-content bg-gray-50 px-5 border-t border-gray-100">
+                            <div class="mb-4 mt-2">
+                                <span class="inline-flex items-center bg-teal-100 text-teal-800 text-[0.7rem] px-2.5 py-1 rounded-md font-bold mb-2 shadow-sm tracking-wide">
+                                    <i class="fa-solid fa-book-open mr-1.5"></i>어원 스토리 (Semantic Shift)
+                                </span>
+                                <p class="text-[0.9rem] text-gray-700 leading-relaxed font-medium break-keep">${item.root}</p>
+                            </div>
+                            <div class="pb-3">
+                                <span class="inline-flex items-center bg-amber-50 text-amber-700 border border-amber-200 text-[0.7rem] px-2.5 py-1 rounded-md font-bold mb-2 tracking-wide">
+                                    <i class="fa-solid fa-link mr-1.5"></i>동계어 (Family)
+                                </span>
+                                <p class="text-sm text-gray-600 font-bold">${item.cognates}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            htmlContent += `</div></div>`;
+        }
+        listView.innerHTML = htmlContent;
+        updateFlashcard();
+    }
+
+    function toggleAccordion(id) {
+        const content = document.getElementById(`content-${id}`);
+        const icon = document.getElementById(`icon-${id}`);
+        
+        if (content.classList.contains('open')) {
+            content.classList.remove('open');
+            icon.classList.remove('rotate-180');
+        } else {
+            content.classList.add('open');
+            icon.classList.add('rotate-180');
+        }
+    }
+
+    function toggleMode() {
+        const flashcardView = document.getElementById('flashcardView');
+        const modeBtn = document.getElementById('modeToggleBtn');
+        
+        if (flashcardView.classList.contains('hidden')) {
+            flashcardView.classList.remove('hidden');
+            flashcardView.classList.add('flex');
+            modeBtn.innerHTML = '<i class="fa-solid fa-list mr-1"></i> 목록보기';
+            updateFlashcard();
+        } else {
+            flashcardView.classList.add('hidden');
+            flashcardView.classList.remove('flex');
+            modeBtn.innerHTML = '<i class="fa-solid fa-clone mr-1"></i> 카드모드';
+        }
+    }
+
+    function updateFlashcard() {
+        const item = currentFlatWordList[currentCardIndex];
+        document.getElementById('cardGroup').innerText = `${currentLesson}강 - ${item.group.substring(3)}`;
+        document.getElementById('cardWord').innerText = item.word;
+        document.getElementById('cardWordBack').innerText = item.word;
+        document.getElementById('cardMeaning').innerText = item.meaning;
+        document.getElementById('cardRoot').innerText = item.root;
+        document.getElementById('cardCognates').innerText = item.cognates;
+        
+        document.getElementById('flashcardCounter').innerText = `${currentCardIndex + 1} / ${currentFlatWordList.length}`;
+        
+        if(isFlipped) {
+            document.getElementById('flashcard').classList.remove('rotate-y-180');
+            isFlipped = false;
+        }
+    }
+
+    function flipCard() {
+        const card = document.getElementById('flashcard');
+        isFlipped = !isFlipped;
+        if (isFlipped) {
+            card.classList.add('rotate-y-180');
+        } else {
+            card.classList.remove('rotate-y-180');
+        }
+    }
+
+    function prevCard() {
+        currentCardIndex = (currentCardIndex > 0) ? currentCardIndex - 1 : currentFlatWordList.length - 1;
+        updateFlashcard();
+    }
+
+    function nextCard() {
+        currentCardIndex = (currentCardIndex < currentFlatWordList.length - 1) ? currentCardIndex + 1 : 0;
+        updateFlashcard();
+    }
+
+    // 앱 초기화
+    window.onload = () => {
+        setLesson(13); // 시작 시 13강 선택
+    };
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>메타인지 단어장 (19강~20강)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* 기본 폰트 및 앱 스타일 */
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+
+        /* 아코디언 애니메이션 */
+        .accordion-content { transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s ease, opacity 0.4s ease; max-height: 0; opacity: 0; overflow: hidden; }
+        .accordion-content.open { max-height: 500px; opacity: 1; padding-top: 1rem; padding-bottom: 1rem; }
+        
+        /* 3D 카드 뒤집기 애니메이션 */
+        .perspective-1000 { perspective: 1000px; }
+        .transform-style-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .flip-card-inner { transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+
+        /* 탭 액티브 상태 스타일 (비즈니스 블루 톤) */
+        .tab-btn.active { color: #1e40af; border-bottom-color: #1e40af; font-weight: 700; background-color: #dbeafe; }
+
+        /* 앱 컨테이너 */
+        .app-container { max-width: 480px; margin: 0 auto; background-color: #ffffff; min-height: 100vh; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+<div class="app-container flex flex-col h-screen overflow-hidden">
+    
+    <!-- 상단 헤더 (네이비 톤) -->
+    <header class="bg-slate-800 text-white p-4 sticky top-0 z-20 flex justify-between items-center shadow-lg">
+        <div>
+            <h1 class="text-xl font-extrabold tracking-tight"><i class="fa-solid fa-scale-balanced mr-2"></i>메타인지 단어장</h1>
+            <p class="text-xs text-slate-300 mt-1 font-medium">19강(경제) & 20강(정치)</p>
+        </div>
+        <button onclick="toggleMode()" id="modeToggleBtn" class="bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-md hover:bg-blue-500 transition transform active:scale-95">
+            <i class="fa-solid fa-layer-group mr-1"></i> 카드모드
+        </button>
+    </header>
+
+    <!-- 탭 내비게이션 (19강, 20강 분리) -->
+    <div class="flex bg-white shadow-sm sticky top-[72px] z-10 border-b border-slate-200">
+        <button id="tab-19" onclick="setLesson(19)" class="tab-btn active flex-1 py-3.5 text-sm text-slate-500 border-b-2 border-transparent transition duration-200"><i class="fa-solid fa-chart-line mr-1"></i> 19강 (경제·금융)</button>
+        <button id="tab-20" onclick="setLesson(20)" class="tab-btn flex-1 py-3.5 text-sm text-slate-500 border-b-2 border-transparent transition duration-200"><i class="fa-landmark fa-solid mr-1"></i> 20강 (정치·논쟁)</button>
+    </div>
+
+    <!-- 리스트 뷰 -->
+    <main id="listView" class="flex-1 overflow-y-auto p-4 space-y-6 pb-24 bg-slate-50">
+        <!-- JS로 동적 렌더링 -->
+    </main>
+
+    <!-- 플래시카드 뷰 (기본 숨김) -->
+    <div id="flashcardView" class="hidden absolute inset-0 bg-slate-900 bg-opacity-95 z-30 flex-col pb-10">
+        <div class="flex justify-between items-center p-5 text-white">
+            <span id="flashcardCounter" class="text-sm font-bold bg-slate-800 px-4 py-1.5 rounded-full border border-slate-600 shadow-inner">1 / 30</span>
+            <button onclick="toggleMode()" class="text-slate-400 hover:text-white transition transform hover:rotate-90"><i class="fa-solid fa-xmark text-3xl"></i></button>
+        </div>
+
+        <div class="flex-1 flex items-center justify-center p-6 w-full perspective-1000">
+            <div id="flashcard" class="w-full h-[65vh] max-w-sm relative transform-style-3d flip-card-inner cursor-pointer" onclick="flipCard()">
+                
+                <!-- 플래시카드 앞면 -->
+                <div class="absolute inset-0 w-full h-full bg-white rounded-3xl shadow-2xl backface-hidden flex flex-col justify-center items-center p-8 text-center border-b-8 border-blue-500">
+                    <span id="cardGroup" class="absolute top-6 text-xs font-bold text-blue-800 bg-blue-100 px-3 py-1 rounded-full border border-blue-200">그룹</span>
+                    <h2 id="cardWord" class="text-4xl font-black text-slate-800 mb-4 tracking-tight break-words">Word</h2>
+                    <p class="text-slate-400 text-sm mt-6 font-medium animate-pulse"><i class="fa-solid fa-hand-pointer mr-2"></i>카드를 눌러 뒤집기</p>
+                </div>
+
+                <!-- 플래시카드 뒷면 -->
+                <div class="absolute inset-0 w-full h-full bg-slate-800 rounded-3xl shadow-2xl backface-hidden rotate-y-180 flex flex-col p-6 text-white overflow-y-auto border-b-8 border-slate-950">
+                    <h2 id="cardWordBack" class="text-2xl font-bold mb-2 border-b border-slate-600 pb-2 text-blue-300">Word</h2>
+                    <p id="cardMeaning" class="text-2xl font-black mb-5 text-white">의미</p>
+                    
+                    <div class="bg-slate-700 rounded-xl p-4 mb-4 shadow-inner">
+                        <p class="text-[0.7rem] text-blue-300 mb-2 font-bold uppercase tracking-wider"><i class="fa-solid fa-book-open mr-1"></i> 어원 스토리 (Semantic Shift)</p>
+                        <p id="cardRoot" class="text-sm leading-relaxed text-slate-100 font-medium">어원 설명</p>
+                    </div>
+                    
+                    <div class="bg-slate-700 rounded-xl p-4 shadow-inner">
+                        <p class="text-[0.7rem] text-emerald-300 mb-2 font-bold uppercase tracking-wider"><i class="fa-solid fa-link mr-1"></i> 동계어 (Family)</p>
+                        <p id="cardCognates" class="text-sm font-bold text-emerald-100">동계어 설명</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 하단 좌우 네비게이션 버튼 -->
+        <div class="flex justify-center items-center space-x-8 px-6 pb-4">
+            <button onclick="prevCard()" class="w-16 h-16 rounded-full bg-slate-700 text-white flex justify-center items-center active:bg-slate-600 hover:bg-slate-600 transition transform active:scale-90 border border-slate-500 shadow-xl">
+                <i class="fa-solid fa-chevron-left text-2xl"></i>
+            </button>
+            <button onclick="nextCard()" class="w-16 h-16 rounded-full bg-blue-600 text-white flex justify-center items-center active:bg-blue-500 hover:bg-blue-500 transition transform active:scale-90 shadow-[0_0_20px_rgba(37,99,235,0.4)]">
+                <i class="fa-solid fa-chevron-right text-2xl"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const db = {
+        // ----------------- [ 19강: 경제, 금융 (30단어) ] -----------------
+        19: [
+            // 그룹 1: 재산과 자본 (-cap-, -asset-, -prop-)
+            { word: "asset", meaning: "자산, 재산", root: "ad(충분히) + satis(충분한) → 빚을 모두 갚고도 남을 만큼 '충분히' 가지고 있는 것에서 유래하여 개인이나 회사의 귀중한 '자산'을 뜻하게 되었습니다.", cognates: "satisfy(만족시키다), saturate(흠뻑 적시다)", group: "1. 재산과 자본 (-cap-, -prop-)" },
+            { word: "stock", meaning: "주식, 주; 재고(품)", root: "나무의 '기둥, 그루터기'라는 뜻에서 유래했습니다. 나무 기둥이 자산의 든든한 뼈대가 되듯, 회사의 뼈대가 되는 '주식' 또는 창고에 뼈대처럼 쌓인 '재고'를 뜻합니다.", cognates: "stalk(줄기, 대)", group: "1. 재산과 자본 (-cap-, -prop-)" },
+            { word: "property", meaning: "재산, 소유물; 부동산, 토지", root: "propri(자신의 것) + ty → 남과 공유하는 것이 아니라, 오직 나 자신에게만 온전히 속해 있는 개인 소유의 물건이나 부동산을 뜻합니다.", cognates: "proper(적절한), appropriate(적절한, 도용하다)", group: "1. 재산과 자본 (-cap-, -prop-)" },
+            { word: "fortune", meaning: "재산, 부; 행운", root: "라틴어 fortuna(행운의 여신) → 로마 신화의 운명의 여신이 수레바퀴를 굴리며 변덕스럽게 가져다주는 '행운', 또는 그 행운으로 얻은 막대한 '재산'.", cognates: "fortunate(운이 좋은)", group: "1. 재산과 자본 (-cap-, -prop-)" },
+            { word: "capital", meaning: "자본; 수도; 대문자; 주요한", root: "caput(머리) + al → 사람의 몸에서 머리가 가장 중요하듯, 나라의 머리인 '수도', 사업을 시작할 때 가장 으뜸이 되는 밑천인 '자본'입니다.", cognates: "captain(선장), cap(모자)", group: "1. 재산과 자본 (-cap-, -prop-)" },
+            { word: "budget", meaning: "예산, 예산안", root: "라틴어 bulga(가죽 주머니) → 옛날 영국의 재무장관이 국가의 돈과 장부를 넣어 다니던 '작은 가죽 가방'을 열던 것에서 국가의 '예산'이라는 뜻이 나왔습니다.", cognates: "bulge(불룩하다)", group: "1. 재산과 자본 (-cap-, -prop-)" },
+
+            // 그룹 2: 지출과 소득 (-pend-, -come-)
+            { word: "expense", meaning: "지출, 비용, 경비", root: "ex(밖으로) + pend(매달다, 저울을 달다) → 예전에는 화폐 대신 은의 무게를 저울에 달아서 지불했기에, 내 지갑 밖으로 저울을 달아 빠져나간 '비용'.", cognates: "expend(쏟다, 들이다), expensive(비싼)", group: "2. 지출과 소득 (-pend-, -come-)" },
+            { word: "income", meaning: "수입, 소득", root: "in(안으로) + come(오다) → 일을 한 대가로 내 지갑이나 은행 통장 '안으로 들어오는(come in)' 돈, 즉 수입입니다.", cognates: "outcome(결과)", group: "2. 지출과 소득 (-pend-, -come-)" },
+            { word: "pay off", meaning: "(빚 등을) 다 갚다; 성공하다, 성과를 올리다", root: "pay(지불하다) + off(떨어져, 완전히) → 남은 빚을 '완전히' 다 갚아서 털어내거나, 오랫동안 노력한 것이 마침내 열매를 맺어 큰 보상을 얻는 것.", cognates: "pay(지불하다)", group: "2. 지출과 소득 (-pend-, -come-)" },
+            { word: "finance", meaning: "재정, 재무", root: "fin(끝내다) + ance → 밀려있는 빚이나 세금을 돈으로 모두 지불하여 채무 관계를 깔끔하게 '끝내다'에서 유래한 '재정, 재무'입니다.", cognates: "final(마지막의), finish(끝내다)", group: "2. 지출과 소득 (-pend-, -come-)" },
+            { word: "loan", meaning: "대출(금), 대여", root: "고대 노르드어 lán(빌려줌) → 누군가에게 대가 없이, 혹은 이자를 받기로 약속하고 임시로 물건이나 돈을 '빌려주는 행위'입니다.", cognates: "lend(빌려주다)", group: "2. 지출과 소득 (-pend-, -come-)" },
+            { word: "account", meaning: "거래, 예금 계좌; 계산, 회계", root: "ad(~로) + computare(계산하다) → 은행에 돈이 들어오고 나가는 것을 장부에 꼼꼼히 '계산해서' 적어둔 거래 내역이나 개인의 계좌.", cognates: "count(세다), computer(컴퓨터)", group: "2. 지출과 소득 (-pend-, -come-)" },
+
+            // 그룹 3: 경제의 흐름과 통화 (-eco-, -cur-)
+            { word: "economic", meaning: "경제학의, 경제(상)의", root: "oikos(집) + nomos(관리하다) → 원래 한 집안의 살림살이를 알뜰하게 꾸려나가던 것에서, 현대에 와서 국가 전체의 '경제'를 뜻하게 됨.", cognates: "economy(경제), ecology(생태학)", group: "3. 경제 흐름과 통화 (-eco-, -cur-)" },
+            { word: "commerce", meaning: "상업, 통상, 교섭", root: "com(함께) + merc(장사하다) → 여러 상인들이 시장이나 항구에 '함께' 모여 대규모로 물건을 사고파는 활발한 '상업' 거래.", cognates: "merchant(상인), market(시장)", group: "3. 경제 흐름과 통화 (-eco-, -cur-)" },
+            { word: "currency", meaning: "통화, 화폐; 유통", root: "cur(흐르다) + ency → 멈춰있는 것이 아니라 강물이 막힘없이 굽이쳐 흐르듯, 여러 사람들 사이의 손을 돌고 돌며 '유통되는' 돈.", cognates: "current(현재의, 흐름), occur(발생하다)", group: "3. 경제 흐름과 통화 (-eco-, -cur-)" },
+            { word: "temporary", meaning: "일시적인, 임시의", root: "temp(시간) + orary → 영구적으로 영원히 계속되는 것이 아니라, 한정되고 정해진 찰나의 '시간' 동안만 짤막하게 존재하는 상태.", cognates: "tempo(속도), contemporary(동시대의)", group: "3. 경제 흐름과 통화 (-eco-, -cur-)" },
+            { word: "annual", meaning: "1년의, 해마다의", root: "ann(1년) + ual → 태양이 365일마다 한 바퀴를 돌아 정확히 제자리로 오듯 '1년마다' 정기적으로 열리거나 주어지는.", cognates: "anniversary(기념일)", group: "3. 경제 흐름과 통화 (-eco-, -cur-)" },
+
+            // 그룹 4: 가치 평가와 전략 (-val-, -neg-)
+            { word: "estimate", meaning: "평가하다, 견적하다; 평가, 견적", root: "aes(구리, 돈) + timare(가치를 매기다) → 예전에 구리 동전이 얼마나 있는지 눈으로 어림잡아 보고 돈의 가치를 '계산하고 견적 내다'.", cognates: "esteem(존경하다, 높이 평가하다)", group: "4. 가치 평가와 전략 (-val-, -neg-)" },
+            { word: "negotiate", meaning: "협상하다", root: "neg(아니다) + otium(휴식) → 돈을 버느라 휴식할 틈도 없이 바쁘게 이익을 따지며 상인들이 거래처와 치열하게 '협상하다'.", cognates: "negate(부인하다), negative(부정적인)", group: "4. 가치 평가와 전략 (-val-, -neg-)" },
+            { word: "strategy", meaning: "전략, 계획", root: "stratos(군대) + agein(이끌다) → 고대 그리스에서 장군이 적군의 군대를 이기고 전쟁을 승리로 이끌기 위해 철저하게 짜내는 '전략'.", cognates: "strategic(전략적인)", group: "4. 가치 평가와 전략 (-val-, -neg-)" },
+            { word: "potential", meaning: "잠재적인, 발전 가능성이 있는", root: "pot(힘, 권력) + ential → 겉으로는 조용해서 잘 안 보이지만, 속에는 언제든 터져 나올 수 있는 막강한 '힘과 발전 가능성'을 품고 있는.", cognates: "potent(강력한), power(힘)", group: "4. 가치 평가와 전략 (-val-, -neg-)" },
+            { word: "risk", meaning: "위험, 모험", root: "라틴어 riscare(절벽을 항해하다) → 눈에 보이지 않는 뾰족한 암초가 숨어있는 바다를 향해 배를 모는 아슬아슬하고 '위험한' 투자나 모험.", cognates: "risky(위험한)", group: "4. 가치 평가와 전략 (-val-, -neg-)" },
+
+            // 그룹 5: 경제적 상승과 하락 (변화)
+            { word: "decline", meaning: "(가격) 하락; (가치가) 하락하다", root: "de(아래로) + clin(기울다) → 평평하던 길이나 산비탈이 갑자기 아래로 푹 꺼지듯 가격이나 회사의 가치가 바닥을 향해 꺾여 내려가는 모습.", cognates: "incline(기울이다), recline(비스듬히 기대다)", group: "5. 경제적 상승과 하락" },
+            { word: "boost", meaning: "증대하다; 경기 부양, 가격의 상승", root: "오래전 '소의 엉덩이를 뒤에서 밀어 올리다'라는 뜻에서 출발. 누군가 뒤에서 강력하게 팍 밀어주어 경기나 가격을 위로 솟구치게 띄우는 것.", cognates: "booster(촉진제)", group: "5. 경제적 상승과 하락" },
+            { word: "collapse", meaning: "붕괴되다, 무너지다, 폭락하다; 붕괴, 실패", root: "col(함께) + laps(미끄러지다) → 멀쩡하던 건물의 기둥들이 한꺼번에 우르르 '미끄러져' 바닥으로 주저앉으며 완전히 '폭락하고 붕괴하다'.", cognates: "lapse(경과, 소멸), relapse(재발하다)", group: "5. 경제적 상승과 하락" },
+            { word: "outcome", meaning: "결과, (구체적인) 성과", root: "out(밖으로) + come(오다) → 공장의 여러 제작 과정이 다 끝나고 최종적으로 문 밖으로 완성되어 걸어 나온 구체적인 '결과물'.", cognates: "come(오다)", group: "5. 경제적 상승과 하락" },
+            { word: "lay off", meaning: "~을 해고하다", root: "lay(놓다) + off(떨어져서) → 원래 열심히 일하던 자리에서 억지로 도구를 '내려놓게' 하고 회사에서 멀리 떨어지게 하여 영원히 쉬게 하는 '해고'.", cognates: "layer(층), off(분리)", group: "5. 경제적 상승과 하락" },
+            { word: "unemployed", meaning: "실업의, 무직의", root: "un(아닌) + em(안에) + ploy(접다, 얽히다) → 회사 시스템 안에 안전하게 고용되어 얽혀있지 '않고' 밖으로 튕겨 풀려나 직업이 없는 상태.", cognates: "employ(고용하다), employee(직원)", group: "5. 경제적 상승과 하락" },
+            { word: "possess", meaning: "소유하다, 가지다", root: "pot(할 수 있는, 힘) + sess(앉다) → 어떤 귀중한 물건이나 땅 위에 떡하니 주저앉아 내 마음대로 지배하고 통제할 수 있는 권리를 행사하는 '소유'.", cognates: "session(회의), possessive(소유욕이 강한)", group: "5. 경제적 상승과 하락" },
+            { word: "in need", meaning: "어려움에 처한, 궁핍한", root: "need(필요, 결핍) → 살아가는 데 꼭 필요한 것들(음식, 돈, 보금자리)이 텅 비어있어서 매우 궁핍하고 절실하게 '도움이 필요한' 상태.", cognates: "needy(가난한)", group: "5. 경제적 상승과 하락" }
+        ],
+
+        // ----------------- [ 20강: 정치, 논쟁 (30단어) ] -----------------
+        20: [
+            // 그룹 1: 선거와 후보 (-lect-, -cand-)
+            { word: "elect", meaning: "선거하다, 선출하다, 고르다", root: "e(밖으로) + lect(고르다) → 수많은 후보자들 중에서 국민들의 뜻에 가장 맞는 마음에 드는 사람 한 명을 콕 집어 '밖으로 골라내는' 행위.", cognates: "select(선택하다), collect(모으다)", group: "1. 선거와 후보 (-lect-, -cand-)" },
+            { word: "candidate", meaning: "후보자[출마자]; 지원자", root: "candidus(순백의) → 고대 로마에서 선거에 출마하는 사람이 뇌물을 받지 않는 자신의 맑고 청렴함을 과시하려고 '새하얀 토가'를 입은 데서 유래.", cognates: "candid(솔직한), candle(양초 - 하얀빛)", group: "1. 선거와 후보 (-lect-, -cand-)" },
+            { word: "run for", meaning: "~에 입후보하다, 출마하다", root: "run(달리다) + for(~을 위해) → 선거에서 시장이나 대통령 같은 특정한 자리를 차지하기 '위해' 유세장을 땀 흘리며 뛰어다니는 모습.", cognates: "run(달리다)", group: "1. 선거와 후보 (-lect-, -cand-)" },
+            { word: "campaign", meaning: "선거 운동, 유세, 캠페인", root: "라틴어 campus(평원) → 군대가 넓은 평원(campus)에서 텐트를 치고 벌이는 군사 작전에서 유래하여, 지금은 선거에서 이기기 위한 치열한 '유세 운동'.", cognates: "campus(캠퍼스), camp(야영지)", group: "1. 선거와 후보 (-lect-, -cand-)" },
+            { word: "party", meaning: "정당; 파티, 회합", root: "part(나누다) + y → 전체 국민이라는 큰 무리에서 비슷한 정치적 생각과 이념을 가진 사람들끼리 따로 '떨어져 나온(나뉜)' 무리인 '정당'.", cognates: "part(부분), apartment(아파트 - 나뉜 공간)", group: "1. 선거와 후보 (-lect-, -cand-)" },
+            
+            // 그룹 2: 권력과 정부 (-auth-, -dem-)
+            { word: "authority", meaning: "권위, 권한; (pl.) 당국", root: "auctor(창조자, 권위자) → 사회의 규칙을 처음으로 만들고 사람들을 강하게 이끌 수 있는 남다른 지혜와 힘을 가진 정부 기관의 '권위'나 '권한'.", cognates: "author(작가, 창조자), authentic(진짜의)", group: "2. 권력과 정부 (-auth-, -dem-)" },
+            { word: "command", meaning: "지휘하다, 명령하다; 지휘권; 명령", root: "com(완전히) + mand(맡기다) → 군대나 조직에서 부하들에게 해야 할 임무를 '완전히 맡기며' 위에서 아래로 강력하게 '명령하고 지휘하다'.", cognates: "demand(요구하다), mandatory(의무적인)", group: "2. 권력과 정부 (-auth-, -dem-)" },
+            { word: "democracy", meaning: "민주주의, 민주제", root: "demo(민중) + cracy(지배) → 소수의 왕이나 귀족이 아니라 평범한 대중(민중)들이 투표로 권력을 잡고 나라의 주인이 되어 지배하는 '민주주의'.", cognates: "demographic(인구학의), autocracy(독재)", group: "2. 권력과 정부 (-auth-, -dem-)" },
+            { word: "federal", meaning: "연방의, 연방제의", root: "foedus(조약, 동맹) → 미국처럼 여러 개의 완전히 독립된 주(State)들이 하나의 끈(조약)으로 단단히 묶여 뭉쳐서 나라를 이룬 '연방제의'.", cognates: "federation(연합, 연맹)", group: "2. 권력과 정부 (-auth-, -dem-)" },
+            { word: "cabinet", meaning: "(정치) 내각; 장식장, 캐비닛", root: "cabane(작은 오두막) → 소중한 귀중품을 보관하던 '작은 방(장식장)'에서, 나중에는 왕의 밀실에서 모여 회의하던 소수의 핵심 실권자들인 '내각'으로 뜻 확장.", cognates: "cabin(오두막, 객실)", group: "2. 권력과 정부 (-auth-, -dem-)" },
+            { word: "session", meaning: "(국회의) 회기, 기간; 학기", root: "sess(앉다) + ion → 국회의원이나 위원들이 법안을 통과시키기 위해 회의장에 다 같이 엉덩이를 붙이고 '앉아있는' 특정한 시간, 즉 '회기'.", cognates: "sit(앉다), possess(소유하다)", group: "2. 권력과 정부 (-auth-, -dem-)" },
+
+            // 그룹 3: 주장과 대립 (-pos-, -put-)
+            { word: "insist", meaning: "고집하다, 주장하다, 요구하다", root: "in(안에) + sist(서다) → 상대가 밖에서 뭐라고 화를 내든 자기 생각 '안에' 굳건히 발을 박고 '서서' 절대 고집을 꺾지 않고 '주장하다'.", cognates: "consist(구성되다), resist(저항하다)", group: "3. 주장과 대립 (-pos-, -put-)" },
+            { word: "oppose", meaning: "반대하다, 대항하다", root: "ob(반대쪽에) + pose(놓다) → 어떤 법안이나 의견에 대해, 상대방과 마주 보는 정반대 편에 딱 버티고 위치를 잡아 강하게 '반대하고 대항하다'.", cognates: "opposite(정반대의), position(위치)", group: "3. 주장과 대립 (-pos-, -put-)" },
+            { word: "dispute", meaning: "논쟁; 논쟁하다", root: "dis(떨어져서) + pute(생각하다) → 하나의 주제를 두고 서로의 '생각이 엇갈려' 하나로 모이지 못하고 날카로운 말로 맞붙어 싸우는 '논쟁'.", cognates: "computer(컴퓨터 - 셈하다), reputation(평판)", group: "3. 주장과 대립 (-pos-, -put-)" },
+            { word: "hostile", meaning: "적대적인", root: "host(적) + ile → 나를 찾아온 반가운 손님(guest)이 아니라, 총칼을 들고 국경을 쳐들어온 '적군(host)'을 대하듯 으르렁거리는 '적대적인' 태도.", cognates: "hostage(인질), host(군대, 주인)", group: "3. 주장과 대립 (-pos-, -put-)" },
+            { word: "indifferent", meaning: "무관심한", root: "in(부정) + differ(다르다) → 이 법안이 통과되든 말든 A와 B의 결과가 나한테는 조금도 '다르지' 않고 똑같아 보일 정도로 아예 '무관심한'.", cognates: "different(다른), difference(차이)", group: "3. 주장과 대립 (-pos-, -put-)" },
+            { word: "speak for", meaning: "~을 대변하다", root: "speak(말하다) + for(~을 위해) → 권력이 없거나 억압받아 스스로 나서기 힘든 약자들을 '위해' 대신 앞장서서 큰 목소리로 의견을 '대변하다'.", cognates: "speak(말하다)", group: "3. 주장과 대립 (-pos-, -put-)" },
+
+            // 그룹 4: 설득과 승인 (-suad-, -prov-)
+            { word: "persuade", meaning: "설득하다", root: "per(완전히) + suade(권하다, 달콤하게 하다) → 달콤하고 논리적인 말로 상대방의 닫힌 마음을 '완전히' 녹여서 내 쪽으로 넘어오게 '설득하다'.", cognates: "sweet(달콤한), dissuade(단념시키다)", group: "4. 설득과 승인 (-suad-, -prov-)" },
+            { word: "convince", meaning: "납득시키다, 확신시키다", root: "con(완전히) + vince(정복하다) → 단순한 감정이 아니라 확실한 논리적 증거를 통해 상대방의 의심을 '완전히 무찔러 정복하여' 내 말이 맞다고 '납득시키다'.", cognates: "victory(승리), invincible(무적의)", group: "4. 설득과 승인 (-suad-, -prov-)" },
+            { word: "approve", meaning: "찬성하다, 승인하다", root: "ad(~로) + prove(증명하다) → 어떤 정책이나 계획이 훌륭하고 옳다는 것을 사람들에게 인정하고 정부가 공식적으로 도장을 찍어 '승인하다'.", cognates: "prove(증명하다), improve(개선하다)", group: "4. 설득과 승인 (-suad-, -prov-)" },
+            { word: "declare", meaning: "선언하다, 공표하다; 단언하다", root: "de(완전히) + clar(명백한) → 혼자 속으로만 생각하지 않고, 대중 앞에서 확성기를 대고 모든 사실을 '완전히 명백하게' 끄집어내어 '선언하다'.", cognates: "clear(명확한), clarify(명확히 하다)", group: "4. 설득과 승인 (-suad-, -prov-)" },
+            { word: "assume", meaning: "추측하다, 사실이라고 생각하다", root: "ad(~로) + sum(취하다) → 아직 재판이 끝나거나 확실한 증거가 나오지 않았지만, 일단 마음속으로 그렇다고 결론을 '가져다(취하여)' '기정사실화하다'.", cognates: "consume(소비하다), presume(추정하다)", group: "4. 설득과 승인 (-suad-, -prov-)" },
+
+            // 그룹 5: 연합과 행위 (행정)
+            { word: "unify", meaning: "통일하다, 단일화하다", root: "uni(하나) + fy(만들다) → 각자 뿔뿔이 흩어져 싸우던 국가들이나, 나뉘어 있던 여러 정당의 의견을 힘을 합쳐 완벽한 '하나로 만들다(통일하다)'.", cognates: "universe(우주), unique(독특한)", group: "5. 연합과 행위 (행정)" },
+            { word: "union", meaning: "연합, 합병; (노동) 조합", root: "uni(하나) + on(명사) → 여러 명의 노동자들이나 단체가 부당한 대우에 맞서고 공동의 이익을 쟁취하기 위해 뜻을 모아 '하나'의 몸체로 결합한 '조합'.", cognates: "unit(단위), unite(연합하다)", group: "5. 연합과 행위 (행정)" },
+            { word: "conservative", meaning: "보수적인", root: "con(함께) + serv(지키다) + ive → 세상이 빠르게 변해도, 오랫동안 사회를 지탱해 온 옛날의 훌륭한 전통과 질서를 깨지 않고 그대로 '함께 지켜가려는'.", cognates: "preserve(보존하다), reserve(예약하다)", group: "5. 연합과 행위 (행정)" },
+            { word: "deed", meaning: "업적; 행위", root: "do(하다)의 고대 영어 명사형 → 말꾼들처럼 입으로만 떠들거나 머릿속 생각으로 끝내지 않고, 몸을 움직여 실제로 '실천에 옮긴' 훌륭한 '업적'.", cognates: "do(하다), indeed(정말로)", group: "5. 연합과 행위 (행정)" },
+            { word: "official", meaning: "공무원, 관리; 공무상의, 공식의", root: "offic(일, 직무) + ial → 개인적인 돈벌이가 아니라 국가나 정부가 국민을 위해 대신 맡긴 공적인 직무를 담당하고 수행하는 '공무원'.", cognates: "office(사무실), officer(장교)", group: "5. 연합과 행위 (행정)" },
+            { word: "reputation", meaning: "평판; 명성, 덕망", root: "re(다시) + put(생각하다) + ation → 그 정치인이 한 행동에 대해 대중들이 계속해서 '거듭 다시 생각'하고 입에 오르내리면서 사회적으로 굳어진 '평판'.", cognates: "dispute(논쟁하다), compute(계산하다)", group: "5. 연합과 행위 (행정)" },
+            { word: "postpone", meaning: "연기하다, 뒤로 미루다", root: "post(뒤에) + pon(놓다) → 오늘 당장 결론을 내야 할 골치 아픈 회의 안건을, 달력의 다음 달 '뒤쪽' 칸으로 휙 집어 던져 '놓고' '미루다'.", cognates: "postscript(추신), position(위치)", group: "5. 연합과 행위 (행정)" },
+            { word: "immediate", meaning: "즉각적인; 직접적인, 가장 가까운", root: "im(부정) + medi(중간) + ate → 사건이 터졌을 때, 나와 그 사건 사이에 생각할 '중간' 틈이나 방해물이 아무것도 없이 곧바로 행동이 이어지는 '즉각적인'.", cognates: "medium(중간의), middle(중간)", group: "5. 연합과 행위 (행정)" }
+        ]
+    };
+
+    let currentLesson = 19; // 기본 19강 선택
+    let currentCardIndex = 0;
+    let isFlipped = false;
+    let currentFlatWordList = [];
+
+    // --- 단원 탭 전환 로직 ---
+    function setLesson(lessonNumber) {
+        currentLesson = lessonNumber;
+        currentCardIndex = 0;
+
+        // 탭 UI 스타일 업데이트 (블루 톤)
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+            btn.classList.replace('text-blue-800', 'text-slate-500');
+            btn.classList.replace('border-blue-800', 'border-transparent');
+            btn.classList.remove('bg-blue-100');
+        });
+        const activeTab = document.getElementById(`tab-${lessonNumber}`);
+        activeTab.classList.add('active');
+        activeTab.classList.replace('text-slate-500', 'text-blue-800');
+        activeTab.classList.replace('border-transparent', 'border-blue-800');
+        activeTab.classList.add('bg-blue-100');
+
+        renderList();
+    }
+
+    function renderList() {
+        const listView = document.getElementById('listView');
+        let htmlContent = '';
+        
+        const words = db[currentLesson];
+        currentFlatWordList = words;
+
+        // 그룹별 데이터 분류
+        const groupedData = words.reduce((acc, word) => {
+            if (!acc[word.group]) acc[word.group] = [];
+            acc[word.group].push(word);
+            return acc;
+        }, {});
+
+        for (const [groupName, groupWords] of Object.entries(groupedData)) {
+            htmlContent += `
+                <div class="mb-8">
+                    <h2 class="text-[0.85rem] font-extrabold text-blue-700 uppercase tracking-widest mb-3 pl-1 border-l-4 border-blue-500">${groupName}</h2>
+                    <div class="space-y-3">
+            `;
+            
+            groupWords.forEach((item, index) => {
+                const id = `word-${currentLesson}-${index}`;
+                htmlContent += `
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
+                        <div class="p-4 flex justify-between items-center cursor-pointer active:bg-slate-50" onclick="toggleAccordion('${id}')">
+                            <div class="pr-4">
+                                <h3 class="text-lg font-bold text-slate-800">${item.word}</h3>
+                                <p class="text-sm font-medium text-slate-500 mt-0.5">${item.meaning}</p>
+                            </div>
+                            <div class="w-8 h-8 flex-shrink-0 flex justify-center items-center rounded-full bg-blue-50 text-blue-600">
+                                <i id="icon-${id}" class="fa-solid fa-chevron-down transition-transform duration-300 text-sm"></i>
+                            </div>
+                        </div>
+                        
+                        <div id="content-${id}" class="accordion-content bg-slate-50 px-5 border-t border-slate-100">
+                            <div class="mb-4 mt-2">
+                                <span class="inline-flex items-center bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-md font-bold mb-2 shadow-sm">
+                                    <i class="fa-solid fa-book-open mr-1.5"></i>어원 스토리 (Semantic Shift)
+                                </span>
+                                <p class="text-[0.9rem] text-slate-700 leading-relaxed font-medium break-keep">${item.root}</p>
+                            </div>
+                            <div class="pb-3">
+                                <span class="inline-flex items-center bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs px-2.5 py-1 rounded-md font-bold mb-2">
+                                    <i class="fa-solid fa-link mr-1.5"></i>동계어 (Family)
+                                </span>
+                                <p class="text-sm text-slate-600 font-bold">${item.cognates}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            htmlContent += `</div></div>`;
+        }
+        listView.innerHTML = htmlContent;
+        updateFlashcard();
+    }
+
+    // 아코디언 토글 애니메이션
+    function toggleAccordion(id) {
+        const content = document.getElementById(`content-${id}`);
+        const icon = document.getElementById(`icon-${id}`);
+        
+        if (content.classList.contains('open')) {
+            content.classList.remove('open');
+            icon.classList.remove('rotate-180');
+        } else {
+            content.classList.add('open');
+            icon.classList.add('rotate-180');
+        }
+    }
+
+    function toggleMode() {
+        const flashcardView = document.getElementById('flashcardView');
+        const modeBtn = document.getElementById('modeToggleBtn');
+        
+        if (flashcardView.classList.contains('hidden')) {
+            flashcardView.classList.remove('hidden');
+            flashcardView.classList.add('flex');
+            modeBtn.innerHTML = '<i class="fa-solid fa-list mr-1"></i> 목록보기';
+            updateFlashcard();
+        } else {
+            flashcardView.classList.add('hidden');
+            flashcardView.classList.remove('flex');
+            modeBtn.innerHTML = '<i class="fa-solid fa-layer-group mr-1"></i> 카드모드';
+        }
+    }
+
+    function updateFlashcard() {
+        const item = currentFlatWordList[currentCardIndex];
+        document.getElementById('cardGroup').innerText = `${currentLesson}강 - ${item.group.substring(3)}`; // 번호 제거
+        document.getElementById('cardWord').innerText = item.word;
+        document.getElementById('cardWordBack').innerText = item.word;
+        document.getElementById('cardMeaning').innerText = item.meaning;
+        document.getElementById('cardRoot').innerText = item.root;
+        document.getElementById('cardCognates').innerText = item.cognates;
+        
+        document.getElementById('flashcardCounter').innerText = `${currentCardIndex + 1} / ${currentFlatWordList.length}`;
+        
+        if(isFlipped) {
+            document.getElementById('flashcard').classList.remove('rotate-y-180');
+            isFlipped = false;
+        }
+    }
+
+    function flipCard() {
+        const card = document.getElementById('flashcard');
+        isFlipped = !isFlipped;
+        if (isFlipped) {
+            card.classList.add('rotate-y-180');
+        } else {
+            card.classList.remove('rotate-y-180');
+        }
+    }
+
+    function prevCard() {
+        currentCardIndex = (currentCardIndex > 0) ? currentCardIndex - 1 : currentFlatWordList.length - 1;
+        updateFlashcard();
+    }
+
+    function nextCard() {
+        currentCardIndex = (currentCardIndex < currentFlatWordList.length - 1) ? currentCardIndex + 1 : 0;
+        updateFlashcard();
+    }
+
+    // 앱 초기 실행
+    window.onload = () => {
+        setLesson(19); // 19강 기본 시작
+    };
+</script>
+</body>
+</html>
